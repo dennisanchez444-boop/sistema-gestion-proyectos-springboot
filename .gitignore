@@ -1,0 +1,10 @@
+# Ignorar todo
+*
+
+# Permitir src
+!src/
+!src/**
+
+# Permitir gitignore
+!.gitignore
+
