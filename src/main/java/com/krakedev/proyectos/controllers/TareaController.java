@@ -5,6 +5,7 @@ import com.krakedev.proyectos.services.TareaService;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,6 +22,7 @@ public class TareaController {
 	}
 
 	@PostMapping
+	@PreAuthorize("hasRole('ADMIN')")
 	public ResponseEntity<?> guardar(@RequestBody Tarea tarea) {
 		try {
 			Tarea tareaGuardada = service.insertar(tarea);
@@ -31,6 +33,7 @@ public class TareaController {
 	}
 
 	@GetMapping
+	@PreAuthorize("hasAnyRole('ADMIN', 'USER')")
 	public ResponseEntity<?> listar() {
 		try {
 			List<Tarea> tareas = service.listarTodos();
@@ -44,13 +47,10 @@ public class TareaController {
 	public ResponseEntity<?> buscar(@PathVariable int id) {
 		try {
 			Optional<Tarea> tarea = service.buscarPorId(id);
-
 			if (tarea.isEmpty()) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Tarea no encontrada");
 			}
-
 			return ResponseEntity.ok(tarea.get());
-
 		} catch (RuntimeException e) {
 			return ResponseEntity.internalServerError().body("Error al buscar la tarea");
 		}
@@ -60,13 +60,10 @@ public class TareaController {
 	public ResponseEntity<?> actualizar(@PathVariable int id, @RequestBody Tarea tarea) {
 		try {
 			Tarea tareaActualizada = service.actualizar(id, tarea);
-
 			if (tareaActualizada == null) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Tarea no encontrada");
 			}
-
 			return ResponseEntity.ok(tareaActualizada);
-
 		} catch (RuntimeException e) {
 			return ResponseEntity.internalServerError().body("Error al actualizar la tarea");
 		}
@@ -76,13 +73,10 @@ public class TareaController {
 	public ResponseEntity<?> eliminar(@PathVariable int id) {
 		try {
 			boolean eliminado = service.eliminar(id);
-
 			if (!eliminado) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Tarea no encontrada");
 			}
-
-			return ResponseEntity.ok("Tarea eliminada correctamente");
-
+			return ResponseEntity.ok("TareaCamp eliminada correctamente");
 		} catch (RuntimeException e) {
 			return ResponseEntity.internalServerError().body("Error al eliminar la tarea");
 		}

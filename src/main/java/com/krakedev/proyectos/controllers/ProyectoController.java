@@ -5,6 +5,7 @@ import com.krakedev.proyectos.services.ProyectoService;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,6 +22,7 @@ public class ProyectoController {
 	}
 
 	@PostMapping
+	@PreAuthorize("hasRole('ADMIN')")
 	public ResponseEntity<?> guardar(@RequestBody Proyecto proyecto) {
 		try {
 			Proyecto proyectoGuardado = service.insertar(proyecto);
@@ -31,6 +33,7 @@ public class ProyectoController {
 	}
 
 	@GetMapping
+	@PreAuthorize("hasAnyRole('ADMIN', 'USER')")
 	public ResponseEntity<?> listar() {
 		try {
 			List<Proyecto> proyectos = service.listarTodos();
@@ -44,13 +47,10 @@ public class ProyectoController {
 	public ResponseEntity<?> buscar(@PathVariable int id) {
 		try {
 			Optional<Proyecto> proyecto = service.buscarPorId(id);
-
 			if (proyecto.isEmpty()) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Proyecto no encontrado");
 			}
-
 			return ResponseEntity.ok(proyecto.get());
-
 		} catch (RuntimeException e) {
 			return ResponseEntity.internalServerError().body("Error al buscar el proyecto");
 		}
@@ -60,29 +60,24 @@ public class ProyectoController {
 	public ResponseEntity<?> actualizar(@PathVariable int id, @RequestBody Proyecto proyecto) {
 		try {
 			Proyecto proyectoActualizado = service.actualizar(id, proyecto);
-
 			if (proyectoActualizado == null) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Proyecto no encontrado");
 			}
-
 			return ResponseEntity.ok(proyectoActualizado);
-
 		} catch (RuntimeException e) {
 			return ResponseEntity.internalServerError().body("Error al actualizar proyecto");
 		}
 	}
 
 	@DeleteMapping("/{id}")
+	@PreAuthorize("hasRole('ADMIN')")
 	public ResponseEntity<?> eliminar(@PathVariable int id) {
 		try {
 			boolean eliminado = service.eliminar(id);
-
 			if (!eliminado) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Proyecto no encontrado");
 			}
-
 			return ResponseEntity.ok("Proyecto eliminado correctamente");
-
 		} catch (RuntimeException e) {
 			return ResponseEntity.internalServerError().body("Error al eliminar proyecto");
 		}

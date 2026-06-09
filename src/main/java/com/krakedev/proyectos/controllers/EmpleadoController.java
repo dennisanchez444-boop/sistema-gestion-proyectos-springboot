@@ -5,6 +5,7 @@ import com.krakedev.proyectos.services.EmpleadoService;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,6 +22,7 @@ public class EmpleadoController {
 	}
 
 	@PostMapping
+	@PreAuthorize("hasRole('ADMIN')")
 	public ResponseEntity<?> guardar(@RequestBody Empleado empleado) {
 		try {
 			Empleado empleadoGuardado = service.insertar(empleado);
@@ -31,6 +33,7 @@ public class EmpleadoController {
 	}
 
 	@GetMapping
+	@PreAuthorize("hasAnyRole('ADMIN', 'USER')")
 	public ResponseEntity<?> listar() {
 		try {
 			List<Empleado> empleados = service.listarTodos();
@@ -62,18 +65,15 @@ public class EmpleadoController {
 			return ResponseEntity.internalServerError().body("Error al actualizar empleado");
 		}
 	}
-	
+
 	@DeleteMapping("/{id}")
 	public ResponseEntity<?> eliminar(@PathVariable int id) {
 		try {
 			boolean eliminado = service.eliminar(id);
-
 			if (!eliminado) {
 				return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Empleado no encontrado");
 			}
-
 			return ResponseEntity.ok("Empleado eliminado correctamente");
-
 		} catch (RuntimeException e) {
 			return ResponseEntity.internalServerError().body("Error al eliminar Empleado");
 		}
