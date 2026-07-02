@@ -18,10 +18,10 @@ public class Usuario {
 	@Column(unique = true, nullable = false)
 	private String username;
 
-	@Column(unique = true)
+	@Column(unique = false)
 	private String password;
 
-	@Column(unique = true)
+	@Column(unique = false, length = 30)
 	private String rol;
 
 	public Usuario() {
