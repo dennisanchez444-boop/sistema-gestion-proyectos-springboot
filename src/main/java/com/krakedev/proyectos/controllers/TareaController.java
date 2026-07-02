@@ -8,11 +8,16 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
+@CrossOrigin(origins = "http://localhost:5173", allowedHeaders = { "Authorization", "Content-Type" }, methods = {
+		RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE })
 @RequestMapping("/api/tareas")
+
 public class TareaController {
 
 	private final TareaService service;
@@ -25,6 +30,14 @@ public class TareaController {
 	@PreAuthorize("hasRole('ADMIN')")
 	public ResponseEntity<?> guardar(@RequestBody Tarea tarea) {
 		try {
+			String prioridad = tarea.getPrioridad();
+			if (prioridad == null
+					|| (!prioridad.equals("ALTA") && !prioridad.equals("MEDIA") && !prioridad.equals("BAJA"))) {
+				Map<String, String> errorResponse = new HashMap<>();
+				errorResponse.put("error", "Prioridad no válida");
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+			}
+
 			Tarea tareaGuardada = service.insertar(tarea);
 			return ResponseEntity.status(HttpStatus.CREATED).body(tareaGuardada);
 		} catch (RuntimeException e) {
