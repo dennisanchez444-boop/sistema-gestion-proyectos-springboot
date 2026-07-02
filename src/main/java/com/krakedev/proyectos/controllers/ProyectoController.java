@@ -13,12 +13,25 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/proyectos")
+
+@CrossOrigin(origins = "http://localhost:5173", allowedHeaders = { "Authorization", "Content-Type" }, methods = {
+		RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE })
 public class ProyectoController {
 
 	private final ProyectoService service;
 
 	public ProyectoController(ProyectoService service) {
 		this.service = service;
+	}
+
+	@GetMapping("/publico/resumen")
+	public ResponseEntity<Long> obtenerResumenProyectos() {
+		try {
+			Long totalProyectos = service.contarTotalProyectos();
+			return ResponseEntity.ok(totalProyectos);
+		} catch (RuntimeException e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(0L);
+		}
 	}
 
 	@PostMapping

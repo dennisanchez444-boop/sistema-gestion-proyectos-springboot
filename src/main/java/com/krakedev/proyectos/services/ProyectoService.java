@@ -29,16 +29,21 @@ public class ProyectoService {
 		return repositorio.findById(id);
 
 	}
+	public Long contarTotalProyectos() {
+		return repositorio.count();
+	}
 
 	public Proyecto actualizar(int id, Proyecto proyecto) {
 		Optional<Proyecto> existeP = buscarPorId(id);
-		if (existeP != null) {
+	
+		if (existeP.isPresent()) {
+			proyecto.setId(id); 
 			return repositorio.save(proyecto);
 		} else {
 			return null;
 		}
 	}
-
+	
 	public boolean eliminar(int id) {
 		if (repositorio.existsById(id)) {
 			repositorio.deleteById(id);
