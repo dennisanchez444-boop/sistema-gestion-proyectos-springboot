@@ -9,11 +9,11 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/proyectos")
-
+// Configuración CORS centralizada requerida por la Fase 1.3 para interactuar con React Vite
 @CrossOrigin(origins = "http://localhost:5173", allowedHeaders = { "Authorization", "Content-Type" }, methods = {
 		RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE })
 public class ProyectoController {
@@ -24,75 +24,40 @@ public class ProyectoController {
 		this.service = service;
 	}
 
-	@GetMapping("/publico/resumen")
+	@GetMapping("/publico/resumen") // Endpoint Público Informativo (Fase 1.2) - Debe configurarse en SecurityConfig.java con .permitAll()
 	public ResponseEntity<Long> obtenerResumenProyectos() {
-		try {
-			Long totalProyectos = service.contarTotalProyectos();
-			return ResponseEntity.ok(totalProyectos);
-		} catch (RuntimeException e) {
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(0L);
-		}
+		return ResponseEntity.ok(service.contarTotalProyectos());
 	}
 
 	@PostMapping
-	@PreAuthorize("hasRole('ADMIN')")
-	public ResponseEntity<?> guardar(@RequestBody Proyecto proyecto) {
-		try {
-			Proyecto proyectoGuardado = service.insertar(proyecto);
-			return ResponseEntity.status(HttpStatus.CREATED).body(proyectoGuardado);
-		} catch (RuntimeException e) {
-			return ResponseEntity.badRequest().body(e.getMessage());
-		}
+	@PreAuthorize("hasRole('ADMIN')") // Restricción estricta evaluada en el Punto de Control 1 (403 Forbidden para USER)
+	public ResponseEntity<Proyecto> guardar(@RequestBody Proyecto proyecto) {
+		Proyecto proyectoGuardado = service.insertar(proyecto);
+		return ResponseEntity.status(HttpStatus.CREATED).body(proyectoGuardado);
 	}
 
 	@GetMapping
-	@PreAuthorize("hasAnyRole('ADMIN', 'USER')")
-	public ResponseEntity<?> listar() {
-		try {
-			List<Proyecto> proyectos = service.listarTodos();
-			return ResponseEntity.ok(proyectos);
-		} catch (RuntimeException e) {
-			return ResponseEntity.internalServerError().body("Error al listar proyectos");
-		}
+	@PreAuthorize("hasAnyRole('ADMIN', 'USER')") // Acceso permitido a ambos roles (Fase 2.2 para pintar la tabla en React)
+	public ResponseEntity<List<Proyecto>> listar() {
+		return ResponseEntity.ok(service.listarTodos());
 	}
 
 	@GetMapping("/{id}")
-	public ResponseEntity<?> buscar(@PathVariable int id) {
-		try {
-			Optional<Proyecto> proyecto = service.buscarPorId(id);
-			if (proyecto.isEmpty()) {
-				return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Proyecto no encontrado");
-			}
-			return ResponseEntity.ok(proyecto.get());
-		} catch (RuntimeException e) {
-			return ResponseEntity.internalServerError().body("Error al buscar el proyecto");
-		}
+	@PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+	public ResponseEntity<Proyecto> buscar(@PathVariable Integer id) {
+		return ResponseEntity.ok(service.buscarPorId(id));
 	}
 
 	@PutMapping("/{id}")
-	public ResponseEntity<?> actualizar(@PathVariable int id, @RequestBody Proyecto proyecto) {
-		try {
-			Proyecto proyectoActualizado = service.actualizar(id, proyecto);
-			if (proyectoActualizado == null) {
-				return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Proyecto no encontrado");
-			}
-			return ResponseEntity.ok(proyectoActualizado);
-		} catch (RuntimeException e) {
-			return ResponseEntity.internalServerError().body("Error al actualizar proyecto");
-		}
+	@PreAuthorize("hasRole('ADMIN')") 
+	public ResponseEntity<Proyecto> actualizar(@PathVariable Integer id, @RequestBody Proyecto proyecto) {
+		return ResponseEntity.ok(service.actualizar(id, proyecto));
 	}
 
 	@DeleteMapping("/{id}")
 	@PreAuthorize("hasRole('ADMIN')")
-	public ResponseEntity<?> eliminar(@PathVariable int id) {
-		try {
-			boolean eliminado = service.eliminar(id);
-			if (!eliminado) {
-				return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Proyecto no encontrado");
-			}
-			return ResponseEntity.ok("Proyecto eliminado correctamente");
-		} catch (RuntimeException e) {
-			return ResponseEntity.internalServerError().body("Error al eliminar proyecto");
-		}
+	public ResponseEntity<Map<String, String>> eliminar(@PathVariable Integer id) {
+		service.eliminar(id);
+		return ResponseEntity.ok(Map.of("mensaje", "Proyecto eliminado correctamente"));
 	}
 }

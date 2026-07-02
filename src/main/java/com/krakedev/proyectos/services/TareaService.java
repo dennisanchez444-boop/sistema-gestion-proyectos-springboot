@@ -1,48 +1,57 @@
 package com.krakedev.proyectos.services;
 
-import java.util.List;
-import java.util.Optional;
-
+import com.krakedev.proyectos.entidades.Tarea;
+import com.krakedev.proyectos.repositories.TareaRepository; // Asumiendo tu nombre de repositorio
 import org.springframework.stereotype.Service;
 
-import com.krakedev.proyectos.entidades.Tarea;
-import com.krakedev.proyectos.repositories.TareaRepository;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Set;
 
 @Service
 public class TareaService {
-	private TareaRepository repositorio;
 
-	public TareaService(TareaRepository repositorio) {
-		this.repositorio = repositorio;
-	}
+    private final TareaRepository repository;
+    
+    private static final Set<String> PRIORIDADES_VALIDAS = Set.of("ALTA", "MEDIA", "BAJA");
 
-	public List<Tarea> listarTodos() {
-		return repositorio.findAll();
-	}
+    public TareaService(TareaRepository repository) {
+        this.repository = repository;
+    }
 
-	public Tarea insertar(Tarea tarea) {
-		return repositorio.save(tarea);
-	}
+    public Tarea insertar(Tarea tarea) {
 
-	public Optional<Tarea> buscarPorId(int id) {
-		return repositorio.findById(id);
+        if (tarea.getPrioridad() == null || !PRIORIDADES_VALIDAS.contains(tarea.getPrioridad().toUpperCase())) {
+            throw new IllegalArgumentException("Prioridad no válida"); 
+        }
+        return repository.save(tarea);
+    }
 
-	}
+    public List<Tarea> listarTodos() {
+        return repository.findAll();
+    }
 
-	public Tarea actualizar(int id, Tarea tarea) {
-		Optional<Tarea> existeT = buscarPorId(id);
-		if (existeT != null) {
-			return repositorio.save(tarea);
-		} else {
-			return null;
-		}
-	}
+    public Tarea buscarPorId(int id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Tarea no encontrada"));
+    }
 
-	public boolean eliminar(int id) {
-		if (repositorio.existsById(id)) {
-			repositorio.deleteById(id);
-			return true;
-		}
-		return false;
-	}
+    public Tarea actualizar(int id, Tarea nuevaTarea) {
+        if (!repository.existsById(id)) {
+            throw new NoSuchElementException("Tarea no encontrada");
+        }
+
+        if (nuevaTarea.getPrioridad() == null || !PRIORIDADES_VALIDAS.contains(nuevaTarea.getPrioridad().toUpperCase())) {
+            throw new IllegalArgumentException("Prioridad no válida");
+        }
+        nuevaTarea.setId(id); 
+        return repository.save(nuevaTarea);
+    }
+
+    public void eliminar(int id) {
+        if (!repository.existsById(id)) {
+            throw new NoSuchElementException("Tarea no encontrada");
+        }
+        repository.deleteById(id);
+    }
 }

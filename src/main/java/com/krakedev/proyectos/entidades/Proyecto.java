@@ -3,6 +3,7 @@ package com.krakedev.proyectos.entidades;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Column;
@@ -27,6 +28,7 @@ public class Proyecto {
 	private String descripcion;
 
 	@Column(nullable = false)
+	@JsonFormat(pattern = "yyyy-MM-dd")
 	private LocalDate fechaInicio;
 
 	@JsonIgnore
